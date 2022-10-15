@@ -160,11 +160,11 @@ const displayButtonAndHeader = () => {
         : buttonToTop.style.display = "none"
     // ----------------------
     // display the header when scroll
-    theHeader.style.display = "block";
+    theHeader.style.visibility = "visible";
     // clearTimeout so it will not make a repeating every 3 seconds but it'll disappear it when stop scroll
     clearTimeout(stop)
     stop = setTimeout(() => {
-        theHeader.style.display = "none"
+        theHeader.style.visibility = "hidden"
     }, 3000)
 }
 window.addEventListener("scroll", displayButtonAndHeader)
