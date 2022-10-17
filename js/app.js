@@ -1,101 +1,82 @@
 /**
- *
- * Manipulating the DOM exercise.
- * Exercise programmatically builds navigation,
- * scrolls to anchors from navigation,
- * and highlights section in viewport upon scrolling.
- *
- * Dependencies: None
- *
- * JS Version: ES2015/ES6
- *
- * JS Standard: ESlint
- *
-*/
-
-/**
- * Comments should be present at the beginning of each procedure and class.
- * Great to have comments before crucial code sections within the procedure.
-*/
-
-/**
  * Define Global Variables
- *
 */
 const allSections = document.querySelectorAll("section");
 const navList = document.getElementById("navbar__list");
-const allLinks = navList.querySelectorAll("li a")
-
+const allLinks = navList.querySelectorAll("li a");
+const buttonToTop = document.querySelector("#scroll__top");
+let stop;
 /**
  * End Global Variables
  * Start Helper Functions
- *
 */
 
-// function check if window.innerHeight is Greater than sections
-function hi(ele, sectionHeight) {
+// get the current section position to add active on it 
+const currentSectionPosition = (ele, sectionHeight) => {
     // get the distance between the top window and each section
-    let sectionTop = ele.getBoundingClientRect().top
-    // return if the height of the window is greater than each section plus the height of it 
-    // and we will multiply ----------------------------------------------------------????
+    let sectionTop = ele.getBoundingClientRect().top;
+    // check if innerHeigth is greater than current section height minus 2/3
     return window.innerHeight >= (Math.floor(sectionTop) + sectionHeight * 2 / 3)
-}
+};
 
 // add and remove class active form sections and links 
 const removeActiveFromAll = (element) => {
     element.forEach((ele) => {
         ele.classList.remove("active")
-    })
-}
+    });
+};
 // add active class to the current element
 const addActive = (ele) => {
     ele.classList.add('active')
-}
+};
+// remove active when move the the next element
 const removeActive = (ele) => {
     ele.classList.remove('active')
-}
-// remove active when move the the next element
+};
+// function to return the height of navbarList automatically.
+const navItmesHeight = (element) => {
+    let total = 0
+    document.querySelectorAll(element).forEach((ele) => {
+        total += ele.offsetHeight
+    })
+    return total
+};
 /**
  * End Helper Functions
  * Begin Main Functions
- *
 */
 
 // build the nav
 // create fragment as a container for elements so the elements are not reapeated in the page
-let frag = document.createDocumentFragment()
-// first thing i will make loop on all sections 
+const fragment = document.createDocumentFragment();
+//  make loop on all sections 
 const buildNavItems = () => {
     allSections.forEach((section) => {
-        let listItem = document.createElement("li");
-        let link = document.createElement("a");
-        link.className = "menu__link";
-        link.setAttribute('href', section.id);
-        link.innerText = `${section.dataset.nav}`;
-        // append links to listItems
-        listItem.appendChild(link);
+        const listItem = document.createElement("li");
+        const sectionId = section.id
+        listItem.innerHTML = `<a class= "menu__link" href = #${sectionId}>${section.dataset.nav}</a>`
+        listItem.querySelector("a").setAttribute("data-scroll", sectionId);
         // append listItems to an empty container
-        frag.appendChild(listItem);
-    })
+        fragment.appendChild(listItem);
+    });
     // append links to page 
-    navList.appendChild(frag);
-}
-buildNavItems();
-// add class active  to both section and link at the same time we scroll 
+    navList.appendChild(fragment);
+};
+// end build nav
+
+// add class active to both section and link at the same time when we scroll 
 const addClassActive = () => {
     // Add class 'active' to section when near top of viewport
     allSections.forEach((section, i) => {
         // get the height of each section
         let sectionHeight = section.offsetHeight
-        if (hi(section, sectionHeight)) {
-            // remove active for all sections 
-            removeActiveFromAll(allSections)
-            // add active to current section
-            addActive(section)
+        if (currentSectionPosition(section, sectionHeight)) {
+            removeActiveFromAll(allSections) // remove active for all sections
+            addActive(section)  // add active to current section
         } else {
             // remove active class if window smaller than the current section
             removeActive(section)
-        }
+        };
         // ------------------------------------
         // add active to links 
         let allLinks = navList.querySelectorAll("li a")
@@ -107,75 +88,111 @@ const addClassActive = () => {
         } else {
             // remove active class when move to the next section
             removeActive(allLinks[i])
-        }
-    })
-}
-window.addEventListener("scroll", addClassActive)
-// Scroll to anchor ID using scrollTO event
-navList.querySelectorAll("li a").forEach((li) => {
-    li.addEventListener("click", (evt) => {
-        evt.preventDefault()
-        let currentSection = document.getElementById(evt.target.getAttribute("href"))
-        window.scrollTo({
-            top: currentSection.offsetTop - navList.offsetHeight,
-            behavior: "smooth"
-        })
-    })
-})
-
+        };
+    });
+};
+// Scroll to anchor ID using scrollIntoView 
+const onNavItemsClick = (evt) => {
+    evt.preventDefault();
+    let currentSection = evt.target.dataset.scroll //get current ID section from data attribute 
+    if (currentSection) {
+        document.getElementById(currentSection).scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    };
+};
 /**
  * End Main Functions
  * Begin Events
- *
-*/
-
-// Build menu 
-
-// Scroll to section on link click
-
-// Set sections as active
-
-
-
-
-// reset responsive based on navHeight on mobile 
-const resetContentView = () => {
-    window.innerWidth < 678
-        ? document.body.style.paddingTop = navList.offsetHeight
-        : document.body.style.paddingTop = 0
-}
-window.onresize = () => {
-    resetContentView()
-}
-resetContentView()
-
-// maket the button to top 
-let buttonToTop = document.querySelector("#scroll__top");
-let theHeader = document.querySelector(".page__header");
-let stop;
+ */
 // display the button when scroll is bigger than 1000 if else disappear the button
-const displayButtonAndHeader = () => {
+// display the header when scroll and stop it when not scroll for 3 seconds
+const show_scrollBtn_pageHeader = () => {
+    let theHeader = document.querySelector(".page__header");
+    // if window is greater than 1000px the button will appear
     window.scrollY >= 1000
         ? buttonToTop.style.display = "block"
         : buttonToTop.style.display = "none"
     // ----------------------
     // display the header when scroll
-    theHeader.style.visibility = "visible";
-    // clearTimeout so it will not make a repeating every 3 seconds but it'll disappear it when stop scroll
-    clearTimeout(stop)
-    stop = setTimeout(() => {
-        theHeader.style.visibility = "hidden"
-    }, 3000)
-}
-window.addEventListener("scroll", displayButtonAndHeader)
+    const showHeader = () => {
+        if (window.innerWidth > 768) {
+            theHeader.style.visibility = "visible";
+            // using clearTimeout so it will not make a repeating every 3 seconds but it'll disappear header when stop scroll
+            clearTimeout(stop)
+            stop = setTimeout(() => {
+                theHeader.style.visibility = "hidden";
+                theHeader.style.Height = 0;
+            }, 3000);
+        } else if (window.innerWidth < 768) {
+            theHeader.style.visibility = "visible";
+            document.body.style.paddingTop = 70
+        };
+    };
+    showHeader()
+    window.addEventListener("resize", showHeader);
+};
+
 // when click on the button it will scroll to at the beginning of the window which is zero
 const scrollToTop = () => {
     buttonToTop.onclick = () => {
         window.scrollTo({
             top: 0,
             behavior: "smooth"
-        })
-    }
-}
-scrollToTop();
-// end coding 
+        });
+    };
+};
+// when click on the burgerMenu
+const onMenuClick = () => {
+    const navbar_menu = document.querySelector(".navbar__menu");
+    const theMenuButton = document.querySelector("#navbar__toggler");
+    // when click on the menu will add active class to pageHeader 
+    theMenuButton.addEventListener("click", () => {
+        const currentWidth = window.innerWidth;
+        if (currentWidth < 768) {
+            navbar_menu.classList.toggle("show") // to display the burgerMenu
+            if (navbar_menu.classList.contains("show")) {
+                // get the navbarMenu height automatically
+                navbar_menu.style.height = navItmesHeight("#navbar__list li");
+            } else {
+                navbar_menu.style.height = 0
+            };
+        };
+    });
+    // close the menu when click at any place in the page to make it easier for users
+    theMenuButton.addEventListener("blur", () => {
+        navbar_menu.classList.remove("show")
+        navbar_menu.style.height = 0
+    });
+};
+// create collapsible sections 
+const sectionCollapse = () => {
+    for (let section of allSections) {
+        // create the collapse button on each section
+        let div = document.createElement("div");
+        let span = document.createElement("span")
+        let spanTwo = document.createElement("span")
+        div.className = "collapse"
+        div.append(span, spanTwo);
+        section.appendChild(div); //append the collapse button to the page.
+        section.style.height = "80vh"
+        // when click on the collapse button it'll toggle class hide.
+        div.addEventListener("click", (e) => {
+            e.currentTarget.classList.toggle("hide");
+            e.currentTarget.parentElement.classList.toggle("hide")
+        });
+    };
+};
+// gather all the funcitons in one place to make code more clean.
+const myApp = () => {
+    buildNavItems(); //create the navbar automatically.
+    window.addEventListener("scroll", addClassActive);//add active class to both header and links when scroll. 
+    navList.addEventListener("click", onNavItemsClick); // when click on each link it scroll to its id section. 
+    window.addEventListener("scroll", show_scrollBtn_pageHeader);//show the_srollBtn and Page_header when sroll.
+    scrollToTop(); //click the button to scroll to top. 
+    onMenuClick();//show navbar list when click on the menu.
+    sectionCollapse(); //make the section collapsible.
+};
+myApp()
+// end coding
